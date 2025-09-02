@@ -1,0 +1,524 @@
+﻿<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>วิเคราะห์กฎหมายไทย – แพ่ง • อาญา • วิธีพิจารณา • ฎีกา</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root{ --bg:#0b0c10; --panel:#111218; --panel2:#12131a; --text:#e7e7ea; --muted:#a3a5b0; --pri:#22d3ee; --ok:#34d399; --no:#ff9aa2; --bd:#262938; --card:#0f1117 }
+    *{box-sizing:border-box}
+    body{margin:0; font-family:"Noto Sans Thai",system-ui,-apple-system,Segoe UI,Roboto,Arial; background:var(--bg); color:var(--text)}
+    .wrap{max-width:1240px; margin:28px auto; padding:0 18px}
+    .top{display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; justify-content:space-between; margin-bottom:16px}
+    .top h1{margin:0; font-size:22px}
+    .top p{margin:0; color:var(--muted)}
+    .grid{display:grid; grid-template-columns:380px 1fr; gap:16px}
+    @media (max-width:980px){ .grid{grid-template-columns:1fr} }
+    .panel{background:linear-gradient(180deg,var(--panel),var(--panel2)); border:1px solid var(--bd); border-radius:16px; padding:16px}
+    .panel h2{margin:0 0 10px; font-size:16px}
+    label{font-size:13px; color:var(--muted)}
+    textarea,input[type="text"],select{width:100%; background:#0c0e14; border:1px solid var(--bd); color:var(--text); padding:12px; border-radius:12px; outline:none}
+    textarea{min-height:160px; resize:vertical}
+    .roles,.scopes,.opts{display:flex; flex-wrap:wrap; gap:10px; margin:8px 0}
+    .tag{display:flex; gap:8px; align-items:center; background:#0c0e14; border:1px solid var(--bd); padding:8px 10px; border-radius:12px}
+    fieldset{border:1px dashed var(--bd); border-radius:12px; padding:10px; margin:10px 0}
+    legend{padding:0 6px; color:var(--muted); font-size:12px}
+    .checks{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px}
+    .check{display:flex; gap:8px; align-items:center; background:#0c0e14; border:1px solid var(--bd); padding:8px 10px; border-radius:10px}
+    .actions{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px}
+    .btn{border:0; padding:10px 14px; border-radius:12px; cursor:pointer; font-weight:700}
+    .btn.pri{background:var(--pri); color:#0b0c10}
+    .btn.ghost{background:transparent; border:1px solid var(--bd); color:var(--text)}
+    .out .section{background:var(--card); border:1px solid var(--bd); border-radius:14px; padding:14px; margin-bottom:12px}
+    .out h3{margin:0 0 8px; font-size:15px}
+    .muted{color:var(--muted)}
+    .kvs{display:grid; grid-template-columns:220px 1fr; gap:8px}
+    .pill{display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; font-size:12px; border:1px solid var(--bd)}
+    .mono{font-family:ui-monospace,Menlo,Consolas,monospace; font-size:12px}
+    .small{font-size:12px}
+    .grid2{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px}
+    @media (max-width:980px){ .kvs{grid-template-columns:1fr} .grid2{grid-template-columns:1fr} }
+    .code{background:#0c0e14; border:1px solid var(--bd); padding:10px; border-radius:10px; overflow:auto}
+    footer{margin:10px 0; color:var(--muted); text-align:center}
+    .help{font-size:11px; color:var(--muted)}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="top">
+      <div>
+        <h1>วิเคราะห์กฎหมายไทย</h1>
+        <p>จำแนกคดี แพ่งและอาญา จับคู่มาตราและวิธีพิจารณา เทียบฎีกา ประเมินผล และวางกลยุทธ์สู้คดี</p>
+        <div class="help">* เครื่องมือนี้เป็นต้นแบบเพื่อการศึกษา ไม่ใช่คำแนะนำทางกฎหมาย</div>
+      </div>
+      <div class="small muted" id="status">พร้อมใช้งาน</div>
+    </div>
+
+    <div class="grid">
+      <section class="panel">
+        <h2>ตั้งค่าและกรอกข้อเท็จจริง</h2>
+
+        <label>เลือกโมเดล</label>
+        <div class="opts" style="margin-bottom:6px">
+          <select id="model" style="max-width:260px">
+            <option value="gemini-1.5-flash-latest" selected>gemini-1.5-flash-latest</option>
+            <option value="gemini-1.5-pro-latest">gemini-1.5-pro-latest</option>
+          </select>
+          <button class="btn ghost" id="btnTest">ทดสอบ API</button>
+        </div>
+
+        <label>ขอบเขตที่ต้องการวิเคราะห์</label>
+        <div class="scopes">
+          <label class="tag"><input type="checkbox" class="scope" value="แพ่ง" checked> แพ่ง</label>
+          <label class="tag"><input type="checkbox" class="scope" value="อาญา" checked> อาญา</label>
+          <label class="tag"><input type="checkbox" class="scope" value="วิแพ่ง" checked> วิธีพิจารณาความแพ่ง</label>
+          <label class="tag"><input type="checkbox" class="scope" value="วิอาญา" checked> วิธีพิจารณาความอาญา</label>
+          <label class="tag"><input type="checkbox" class="scope" value="พยานหลักฐาน" checked> พยานหลักฐาน</label>
+        </div>
+
+        <label>บทบาทในคดี</label>
+        <div class="roles">
+          <label class="tag"><input type="radio" name="role" value="โจทก์" checked> โจทก์</label>
+          <label class="tag"><input type="radio" name="role" value="จำเลย"> จำเลย</label>
+        </div>
+
+        <div style="margin:10px 0">
+          <label>สรุปข้อเท็จจริง</label>
+          <textarea id="facts" placeholder="ตัวอย่าง: 5 ม.ค. 2567 เวลา 23:30 นาย ก ปีนรั้วเข้าไปในบ้านนาย ข และลักโน้ตบุ๊ก 25,000 บาท นาง ค เห็นเหตุ และมีกล้องวงจรปิด ต่อมาพบของกลางที่ร้านคอมพิวเตอร์"></textarea>
+        </div>
+
+        <fieldset>
+          <legend>มาตราที่สนใจ (ระบุเพื่อเน้นย้ำ)</legend>
+          <div class="checks">
+            <label class="check"><input type="checkbox" value="อาญา:334" checked> อาญา ม.334 ลักทรัพย์</label>
+            <label class="check"><input type="checkbox" value="อาญา:335(1)(ง)" checked> อาญา ม.335(1)(ง) ผ่านสิ่งกีดกั้น</label>
+            <label class="check"><input type="checkbox" value="อาญา:335(1)(จ)" checked> อาญา ม.335(1)(จ) เคหสถาน</label>
+            <label class="check"><input type="checkbox" value="อาญา:335(1)(ฉ)" checked> อาญา ม.335(1)(ฉ) กลางคืน</label>
+            <label class="check"><input type="checkbox" value="อาญา:364"> อาญา ม.364 บุกรุก</label>
+            <label class="check"><input type="checkbox" value="อาญา:365(2)(3)"> อาญา ม.365(2)(3) เหตุหนักขึ้น</label>
+            <label class="check"><input type="checkbox" value="แพ่ง:ละเมิด(420)"> แพ่ง ละเมิด</label>
+            <label class="check"><input type="checkbox" value="แพ่ง:ผิดสัญญา"> แพ่ง ผิดสัญญา/ผิดนัด</label>
+            <label class="check"><input type="checkbox" value="แพ่ง:ลาภมิควรได้"> แพ่ง ลาภมิควรได้</label>
+            <label class="check"><input type="checkbox" value="วิแพ่ง:คุ้มครองชั่วคราว"> วิแพ่ง คำสั่งคุ้มคราว</label>
+            <label class="check"><input type="checkbox" value="วิอาญา:ปล่อยชั่วคราว"> วิอาญา คำร้องปล่อยชั่วคราว</label>
+          </div>
+        </fieldset>
+
+        <div class="actions">
+          <button class="btn pri" id="btnRun">วิเคราะห์คดี (ใช้ Gemini)</button>
+          <button class="btn ghost" id="btnSample">เติมตัวอย่าง</button>
+          <button class="btn ghost" id="btnClear">ล้างข้อมูล</button>
+          <button class="btn ghost" id="btnCopy">คัดลอกรายงาน</button>
+          <button class="btn ghost" id="btnExport">Export .md</button>
+        </div>
+        <div class="small muted" style="margin-top:8px">เวอร์ชันหน้าเดียว (Frontend) — เรียกผ่าน Backend: <span class="mono">/api/gemini</span></div>
+      </section>
+
+      <section class="panel out">
+        <div class="section">
+          <h3>สรุปผลวิเคราะห์ย่อ</h3>
+          <div id="summary" class="muted">กรอกข้อเท็จจริงแล้วกด “วิเคราะห์คดี”</div>
+        </div>
+
+        <div class="section">
+          <h3>ประเภทคดีที่คาดว่าเข้า</h3>
+          <div id="caseType"></div>
+        </div>
+
+        <div class="section">
+          <h3>มาตราและวิธีพิจารณาที่เกี่ยวข้อง</h3>
+          <div id="statutesAndProcedure"></div>
+        </div>
+
+        <div class="section">
+          <h3>ประเมินผลและข้อยกเว้น</h3>
+          <div id="verdict"></div>
+        </div>
+
+        <div class="section">
+          <h3>เทียบฎีกา</h3>
+          <div id="precedents"></div>
+        </div>
+
+        <div class="section">
+          <h3>กลยุทธ์และแผนสืบพยาน</h3>
+          <div class="grid2">
+            <div>
+              <h4>ฝ่ายโจทก์</h4>
+              <div id="strategyC"></div>
+              <h4 style="margin-top:8px">แผนการสืบพยาน (โจทก์)</h4>
+              <div id="witnessPlanC"></div>
+            </div>
+            <div>
+              <h4>ฝ่ายจำเลย</h4>
+              <div id="strategyD"></div>
+              <h4 style="margin-top:8px">แผนการสืบพยาน (จำเลย)</h4>
+              <div id="witnessPlanD"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <h3>เช็กลิสต์พยานหลักฐาน</h3>
+          <div id="evidence"></div>
+        </div>
+
+        <div class="section">
+          <h3>โน้ตจาก AI (Gemini)</h3>
+          <pre id="aiNote" class="code small muted">ยังไม่มีผลลัพธ์</pre>
+        </div>
+
+        <footer>© วิเคราะห์กฎหมายไทย • Credit: <span class="mono">@MrDuck_Man</span></footer>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const CONFIG = { apiBase: "" }; // เรียก relative path เช่น /api/gemini
+
+    const $ = s => document.querySelector(s);
+    const $$ = s => Array.from(document.querySelectorAll(s));
+    const setStatus = t => $('#status').textContent = t || 'พร้อมใช้งาน';
+
+    const getRole = () => ($$('input[name="role"]').find(x=>x.checked)?.value || 'โจทก์');
+    const getFacts = () => $('#facts').value.trim();
+    const getScopes = () => $$('.scope:checked').map(x=>x.value);
+    const getSelectedSections = () => $$('.checks input:checked').map(x=>x.value);
+    const getModel = () => $('#model').value;
+
+    const containsAny = (text, arr) => { const t = text.toLowerCase(); return arr.some(k => t.includes(k)); };
+    const isNight = (text) => {
+      const t = text.toLowerCase();
+      if (t.includes('เวลากลางคืน') || t.includes('ดึก') || t.includes('เที่ยงคืน')) return true;
+      const marks = ['เวลา23','เวลา 23','เวลา 0','เวลา0','เวลา 01','เวลา01','เวลา 1','เวลา 02','เวลา02','เวลา 03','เวลา03','เวลา 04','เวลา04',' 23:',' 00:',' 01:',' 02:',' 03:',' 04:'];
+      return marks.some(m => t.includes(m));
+    };
+
+    function classifyCase(facts){
+      const t = facts.toLowerCase();
+      const buckets = [
+        {type:'อาญา:ลักทรัพย์', key:['ลัก','ขโมย','หยิบยกไป','เอาไป','ขโมยโน้ตบุ๊ก'], statutes:['อาญา:334','อาญา:335(1)(ง)','อาญา:335(1)(จ)','อาญา:335(1)(ฉ)']},
+        {type:'อาญา:บุกรุก', key:['บุกรุก','ปีนรั้ว','งัด','แอบเข้า','เข้าโดยไม่ได้รับอนุญาต'], statutes:['อาญา:364','อาญา:365(2)(3)']},
+        {type:'อาญา:วิ่งราวทรัพย์', key:['วิ่งราว','ฉก','กระชาก'], statutes:['อาญา:336']},
+        {type:'อาญา:ชิงทรัพย์', key:['ชิงทรัพย์','ทำร้ายเพื่อชิง','ข่มขืนใจเอาทรัพย์'], statutes:['อาญา:339']},
+        {type:'อาญา:ปล้นทรัพย์', key:['ปล้น','หลายคนร่วมกัน','มีอาวุธ'], statutes:['อาญา:340']},
+        {type:'แพ่ง:ผิดสัญญา', key:['สัญญา','ผิดสัญญา','ไม่ชำระหนี้','ค้างชำระ','เลิกสัญญา'], statutes:['แพ่ง:ผิดสัญญา']},
+        {type:'แพ่ง:ละเมิด', key:['ละเมิด','ทำให้เสียหาย','ความเสียหาย','ค่าเสียหาย'], statutes:['แพ่ง:ละเมิด(420)']},
+        {type:'แพ่ง:ลาภมิควรได้', key:['ลาภมิควรได้','คืนเงิน','ได้มาโดยไม่มีมูล'], statutes:['แพ่ง:ลาภมิควรได้']},
+        {type:'วิแพ่ง:คุ้มครองชั่วคราว', key:['คุ้มครองชั่วคราว','อายัด','ห้ามทำ','ไต่สวนฉุกเฉิน'], statutes:['วิแพ่ง:คุ้มครองชั่วคราว']},
+        {type:'วิอาญา:ปล่อยชั่วคราว', key:['ปล่อยชั่วคราว','ประกันตัว','ฝากขัง'], statutes:['วิอาญา:ปล่อยชั่วคราว']}
+      ];
+      const scored = buckets.map(b => ({ type:b.type, weight:b.key.reduce((a,k)=>a+(t.includes(k)?1:0),0), statutes:b.statutes }))
+        .filter(x=>x.weight>0).sort((a,b)=>b.weight - a.weight);
+      return scored.length? scored : [{type:'ไม่ชัดเจน', weight:0, statutes:[]}];
+    }
+
+    function renderCaseType(types){
+      $('#caseType').innerHTML = types.map(t => `<span class="pill" title="${t.statutes.join(', ')}">${t.type}${t.weight?` · ${t.weight}`:''}</span>`).join(' ');
+    }
+
+    function analyzeElements(facts){
+      const t = facts;
+      return {
+        'อาญา ม.334 ลักทรัพย์': containsAny(t,['ลัก','ขโมย','หยิบยกไป','เอาไป']) && containsAny(t,['ทรัพย์','ของ','โน้ตบุ๊ก','เงิน','โทรศัพท์']),
+        'อาญา ม.335(1)(ง) ผ่านสิ่งกีดกั้น': containsAny(t,['ปีน','รั้ว','งัด','งัดแงะ','ทำลายกุญแจ','ฝ่า']),
+        'อาญา ม.335(1)(จ) ในเคหสถาน': containsAny(t,['บ้าน','เคหสถาน','ที่พักอาศัย','ห้องพัก']),
+        'อาญา ม.335(1)(ฉ) เวลากลางคืน': isNight(t),
+        'อาญา ม.364 บุกรุกเคหสถาน': containsAny(t,['บุกรุก','เข้าโดยไม่ได้รับอนุญาต','ปีนรั้วเข้า']),
+        'อาญา ม.365(2)(3) เหตุหนักขึ้น': isNight(t) && containsAny(t,['ปีน','ทำลาย','งัด','ใช้กำลัง']),
+        'แพ่ง ละเมิด': containsAny(t,['ละเมิด','ทำให้เสียหาย','ค่าเสียหาย','ความเสียหาย']),
+        'แพ่ง ผิดสัญญา': containsAny(t,['ผิดสัญญา','ไม่ชำระหนี้','ค้างชำระ','ผิดนัด']),
+        'แพ่ง ลาภมิควรได้': containsAny(t,['ลาภมิควรได้','ได้มาโดยไม่มีมูล','คืนเงิน'])
+      };
+    }
+
+    function recommendProcedure(scopes, selectedStatutes){
+      const out = [];
+      if (scopes.includes('วิแพ่ง')) out.push('คำขอคุ้มครองชั่วคราว','ไกล่เกลี่ยหรือประนอมข้อพิพาท','คำขออายัดหรือขอตรวจพยานล่วงหน้า');
+      if (scopes.includes('วิอาญา')) out.push('คำร้องปล่อยชั่วคราว','ไต่สวนมูลฟ้องในคดีเอกชน','ขอพยานเอกสารหรือภาพจากกล้อง','ค้านฝากขังถ้ามี');
+      if (scopes.includes('พยานหลักฐาน')) out.push('จัดทำบัญชีพยาน','คำร้องตรวจพิสูจน์พิมพ์ลายนิ้วมือหรือดีเอ็นเอ','ขอศาลเรียกพยานผู้เชี่ยวชาญ');
+      return Array.from(new Set(out));
+    }
+
+    function renderStatutesAndProcedure(scopes, elements){
+      const sel = Object.entries(elements).filter(([k,v])=>v).map(([k])=>k);
+      const proc = recommendProcedure(scopes, sel);
+      const html = `<div class="kvs"><div class="mono">มาตราที่เข้า</div><div>${sel.length? sel.map(s=>`<span class='pill'>${s}</span>`).join(' ') : '<span class="muted">—</span>'}</div></div>
+        <div class="kvs"><div class="mono">ข้อเสนอวิธีพิจารณา</div><div>${proc.length? proc.map(s=>`<span class='pill'>${s}</span>`).join(' ') : '<span class="muted">—</span>'}</div></div>`;
+      $('#statutesAndProcedure').innerHTML = html;
+    }
+
+    function determineVerdict(types, elements){
+      const primary = types[0]?.type || 'ไม่ชัดเจน';
+      const e = elements; const notes = []; let summary = 'รอข้อมูลเพิ่ม';
+      if (primary.startsWith('อาญา:ลักทรัพย์')){
+        const base = e['อาญา ม.334 ลักทรัพย์'];
+        const agg = [];
+        if (e['อาญา ม.335(1)(ง) ผ่านสิ่งกีดกั้น']) agg.push('ผ่านสิ่งกีดกั้น');
+        if (e['อาญา ม.335(1)(จ) ในเคหสถาน']) agg.push('เคหสถาน');
+        if (e['อาญา ม.335(1)(ฉ) เวลากลางคืน']) agg.push('กลางคืน');
+        summary = base ? 'เข้าองค์ประกอบลักทรัพย์' + (agg.length? ' พร้อมเหตุฉกรรจ์: ' + agg.join(', ') : '') : 'ยังไม่ครบองค์ประกอบลักทรัพย์';
+        notes.push('ข้อยกเว้นที่อาจยก: ยินยอม สำคัญผิด เข้าใจโดยสุจริต ผู้ครอบครองร่วม');
+      } else if (primary.startsWith('อาญา:บุกรุก')){
+        const base = e['อาญา ม.364 บุกรุกเคหสถาน'];
+        const heavy = e['อาญา ม.365(2)(3) เหตุหนักขึ้น'];
+        summary = base ? 'เข้าองค์ประกอบบุกรุก' + (heavy? ' และมีเหตุหนักขึ้นตาม ม.365(2)(3)' : '') : 'ยังไม่ครบองค์ประกอบบุกรุก';
+        notes.push('ประเด็นโต้แย้ง: ขอบเขตเคหสถาน การยินยอม เวลากลางคืนจริงหรือไม่');
+      } else if (primary.startsWith('แพ่ง:ผิดสัญญา')){
+        summary = containsAny(getFacts(),['ไม่ชำระ','ค้างชำระ','ผิดนัด']) ? 'มีมูลข้อผูกพันและผิดนัดชำระ' : 'ต้องพิสูจน์การก่อหนี้ ข้อตกลง และความเสียหาย';
+        notes.push('แนวทางเยียวยา: ชำระหนี้ ค่าเสียหาย บังคับคดี บอกเลิกสัญญา ค่าปรับถ้ามี');
+      } else if (primary.startsWith('แพ่ง:ละเมิด')){
+        summary = containsAny(getFacts(),['ทำให้เสียหาย','ความเสียหาย']) ? 'มีมูลละเมิด ต้องชี้การกระทำ เหตุ และผลเสียหาย' : 'ต้องพิสูจน์องค์ประกอบละเมิดครบถ้วน';
+        notes.push('ค่าเสียหาย: แท้จริง และจิตใจในบางกรณี');
+      } else if (primary.startsWith('แพ่ง:ลาภมิควรได้')){
+        summary = 'พิจารณาว่าได้ลาภโดยไม่มีมูลและผู้เสียหายขาดประโยชน์';
+        notes.push('เยียวยา: คืนลาภ คืนเงิน และดอกเบี้ยตามกฎหมาย');
+      }
+      return { primary, summary, notes };
+    }
+
+    function renderVerdict(v){
+      $('#verdict').innerHTML = `<div class="kvs"><div class="mono">ข้อสรุปหลัก</div><div><span class="pill">${v.primary}</span> — ${v.summary}</div></div>` + (v.notes.length? `<ul>${v.notes.map(n=>`<li>${n}</li>`).join('')}</ul>` : '');
+    }
+
+    function renderStrategies(){
+      const c = [
+        'วางประเด็นพิสูจน์ตามองค์ประกอบและสภาพพยาน',
+        'ลำดับพยาน: ผู้เสียหาย พยานเห็นเหตุ เจ้าพนักงานสอบสวน ผู้เชี่ยวชาญ',
+        'จัดทำบัญชีพยานและคำร้องขอพยานเอกสารหรือภาพจากกล้อง'
+      ];
+      const d = [
+        'ตีความคลุมเครือเป็นคุณแก่จำเลย (คดีอาญา)',
+        'โต้แย้งองค์ประกอบ เหตุฉกรรจ์ และความน่าเชื่อถือพยาน',
+        'ยกข้อยกเว้นหรือคุ้มครองสิทธิ เช่น ยินยอม สำคัญผิด ป้องกันโดยชอบ'
+      ];
+      $('#strategyC').innerHTML = `<ul>${c.map(i=>`<li>${i}</li>`).join('')}</ul>`;
+      $('#strategyD').innerHTML = `<ul>${d.map(i=>`<li>${i}</li>`).join('')}</ul>`;
+    }
+
+    function renderWitnessPlans(){
+      const complainant = [
+        'ผู้เสียหาย/โจทก์ ยืนยันสิทธิและความเสียหายหรือองค์ประกอบความผิด',
+        'พยานเห็นเหตุหรือพยานแวดล้อม',
+        'พนักงานสอบสวน/ผู้ตรวจพิสูจน์/ผู้เชี่ยวชาญ',
+        'ผู้เกี่ยวข้องกับเอกสาร ของกลาง หรือธุรกรรม'
+      ];
+      const defendant = [
+        'พยานไม่อยู่ในที่เกิดเหตุ/โต้แย้งข้อเท็จจริง',
+        'พยานสิทธิ ยินยอม หรือเหตุยกเว้นความรับผิด',
+        'พยานเทคนิค เช่น เวลาในภาพ/แหล่งข้อมูล/ความน่าเชื่อถือ',
+        'พยานบรรเทาโทษหรือการเยียวยา (คดีอาญา)'
+      ];
+      $('#witnessPlanC').innerHTML = `<ul>${complainant.map(i=>`<li>${i}</li>`).join('')}</ul>`;
+      $('#witnessPlanD').innerHTML = `<ul>${defendant.map(i=>`<li>${i}</li>`).join('')}</ul>`;
+    }
+
+    function renderEvidence(){
+      const list = [
+        'คำร้องทุกข์/คำฟ้อง/คำให้การ + บัญชีของกลาง/เอกสารแนบ',
+        'ภาพจากกล้อง/ภาพนิ่ง พร้อมเวลาและสถานที่',
+        'เอกสารสิทธิ/สัญญา/ใบแจ้งหนี้/หลักฐานการชำระ',
+        'ผลตรวจพิสูจน์พิมพ์ลายนิ้วมือ/ดีเอ็นเอ (ถ้ามี)',
+        'คำให้การผู้เสียหาย/พยานเห็นเหตุ/เจ้าหน้าที่/ผู้เชี่ยวชาญ',
+        'หลักฐานดิจิทัล: บันทึกการใช้งาน/ข้อความ/พิกัด/อีเมล'
+      ];
+      $('#evidence').innerHTML = `<ul>${list.map(i=>`<li>${i}</li>`).join('')}</ul>`;
+    }
+
+    function buildPrompt(role, facts, selected, scopes){
+      return `คุณคือผู้ช่วยทนายความไทย ช่วยวิเคราะห์แบบเป็นระบบให้ครอบคลุมทั้งแพ่ง อาญา วิธีพิจารณา และพยานหลักฐาน โดยตอบเป็นหัวข้อชัดเจน:
+1) จำแนกประเภทคดีและชนิดย่อย พร้อมเหตุผล
+2) ระบุมาตราที่เข้าและเหตุฉกรรจ์ ทั้งอาญาและแพ่ง รวมถึงวิธีพิจารณาที่เกี่ยวข้อง
+3) เทียบคำพิพากษาศาลฎีกาที่เกี่ยวข้อง 3–5 เรื่อง ระบุเลขฎีกาและย่อใจความ หากไม่มั่นใจให้ระบุว่าควรตรวจสอบเลขฎีกา
+4) ประเมินความผิดหรือความรับผิด ข้อยกเว้น และภาระการพิสูจน์
+5) กลยุทธ์การสู้คดี แยกฝ่ายโจทก์และจำเลย พร้อมแผนสืบพยานสำคัญ
+6) วิธีพิจารณาที่ควรดำเนินการ เช่น คุ้มครองชั่วคราว ปล่อยชั่วคราว ขอเรียกเอกสาร กำหนดเวลาสำคัญ
+7) เช็กลิสต์พยานหลักฐาน
+
+บทบาท: ${role}
+ขอบเขตที่ผู้ใช้เลือก: ${scopes.join(', ')}
+ข้อเท็จจริง: ${facts}
+ผู้ใช้ระบุมาตราที่สนใจ: ${selected.join(', ')}`;
+    }
+
+    async function callGemini(prompt){
+      const model = getModel();
+      const res = await fetch(`${CONFIG.apiBase}/api/gemini`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model, prompt })
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msg = json?.error || ('API error ' + res.status);
+        throw new Error(msg);
+      }
+      return json;
+    }
+
+    function extractGeminiText(json){
+      try {
+        const c = json.candidates?.[0];
+        const part = c?.content?.parts?.[0];
+        return part?.text || JSON.stringify(json, null, 2);
+      } catch(e) { return JSON.stringify(json, null, 2); }
+    }
+
+    function composeSummary(facts, elements){
+      const okCount = Object.values(elements).filter(Boolean).length;
+      const brief = facts.length>150 ? facts.slice(0,150) + '…' : facts;
+      return `ข้อเท็จจริงย่อ: ${brief}
+องค์ประกอบ/ประเด็นที่พบเบื้องต้น: ${okCount} รายการ`;
+    }
+
+    function extractPrecedents(text){
+      const lines = text ? text.split(String.fromCharCode(10)).map(s=>s.trim()) : [];
+      const hits = lines.filter(s => s.includes('ฎีกา') || s.includes('คำพิพากษาศาลฎีกา') || s.includes('ฎีกาที่')).slice(0,8);
+      return hits.length ? hits : ['ควรค้นเพิ่มเติมในฐานข้อมูลคำพิพากษาศาลฎีกา'];
+    }
+
+    function renderPrecedents(list){
+      $('#precedents').innerHTML = `<ul>${list.map(i=>`<li>${i}</li>`).join('')}</ul>`;
+    }
+
+    function exportMarkdown(){
+      const text = `# รายงานสรุปคดี
+${$('#summary').textContent}
+
+## ประเภทคดี
+${$('#caseType').innerText}
+
+## มาตราและวิธีพิจารณา
+${$('#statutesAndProcedure').innerText}
+
+## ประเมินผล
+${$('#verdict').innerText}
+
+## เทียบฎีกา
+${$('#precedents').innerText}
+
+## กลยุทธ์โจทก์
+${$('#strategyC').innerText}
+
+## กลยุทธ์จำเลย
+${$('#strategyD').innerText}
+
+## แผนสืบพยานโจทก์
+${$('#witnessPlanC').innerText}
+
+## แผนสืบพยานจำเลย
+${$('#witnessPlanD').innerText}
+
+## เช็กลิสต์พยานหลักฐาน
+${$('#evidence').innerText}
+
+## โน้ตจาก AI (Gemini)
+${$('#aiNote').innerText}
+`;
+      const blob = new Blob([text], {type:'text/markdown;charset=utf-8'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'รายงานสรุปคดี.md';
+      a.click();
+      URL.revokeObjectURL(a.href);
+      setStatus('บันทึกไฟล์ .md แล้ว');
+    }
+
+    // ---- UI events ----
+    document.getElementById('btnSample').addEventListener('click', () => {
+      $('#facts').value = '5 มกราคม 2567 เวลา 23:30 นาย ก ปีนรั้วเข้าไปในบ้านพักของนาย ข และลักโน้ตบุ๊กมูลค่า 25,000 บาท นาง ค เพื่อนบ้านเห็นเหตุการณ์ และมีกล้องวงจรปิด ต่อมาเจ้าพนักงานตำรวจจับกุมนาย ก พร้อมของกลางที่ร้านคอมพิวเตอร์';
+    });
+
+    document.getElementById('btnClear').addEventListener('click', () => {
+      $('#facts').value = '';
+      ['summary','caseType','statutesAndProcedure','verdict','precedents','strategyC','strategyD','witnessPlanC','witnessPlanD','evidence','aiNote'].forEach(id => { const e = document.getElementById(id); if (e) e.innerHTML = ''; });
+      renderEvidence();
+      setStatus('พร้อมใช้งาน');
+    });
+
+    document.getElementById('btnCopy').addEventListener('click', () => {
+      const text = `# รายงานสรุปคดี
+${document.getElementById('summary').textContent}
+
+## ประเภทคดี
+${document.getElementById('caseType').innerText}
+
+## มาตราและวิธีพิจารณา
+${document.getElementById('statutesAndProcedure').innerText}
+
+## ประเมินผล
+${document.getElementById('verdict').innerText}
+
+## เทียบฎีกา
+${document.getElementById('precedents').innerText}
+
+## กลยุทธ์โจทก์
+${document.getElementById('strategyC').innerText}
+
+## กลยุทธ์จำเลย
+${document.getElementById('strategyD').innerText}
+
+## แผนสืบพยานโจทก์
+${document.getElementById('witnessPlanC').innerText}
+
+## แผนสืบพยานจำเลย
+${document.getElementById('witnessPlanD').innerText}
+
+## เช็กลิสต์พยานหลักฐาน
+${document.getElementById('evidence').innerText}
+
+## โน้ตจาก AI (Gemini)
+${document.getElementById('aiNote').innerText}`;
+      navigator.clipboard.writeText(text).then(()=> setStatus('คัดลอกแล้ว')).catch(()=> setStatus('คัดลอกไม่สำเร็จ'));
+    });
+
+    document.getElementById('btnExport').addEventListener('click', exportMarkdown);
+
+    document.getElementById('btnTest').addEventListener('click', async () => {
+      setStatus('ทดสอบ API…');
+      try {
+        const r = await fetch('/api/health');
+        const ok = r.ok ? 'สุขภาพดี' : ('status ' + r.status);
+        // ลองยิง gemini ด้วย prompt สั้นๆ (จะ error หากยังไม่ได้ใส่คีย์ใน .env)
+        const gem = await callGemini('ทดสอบการเชื่อมต่อ API Gemini: ช่วยพิมพ์ว่า "พร้อมใช้งาน"');
+        const note = extractGeminiText(gem);
+        document.getElementById('aiNote').textContent = `[health: ${ok}]\n` + (note || 'ไม่มีข้อความ');
+        setStatus('สำเร็จ');
+      } catch(e) {
+        document.getElementById('aiNote').textContent = 'ทดสอบไม่สำเร็จ: ' + (e.message || e);
+        setStatus('ผิดพลาด');
+      }
+    });
+
+    document.getElementById('btnRun').addEventListener('click', async () => {
+      const role = getRole(); const facts = getFacts(); if (!facts) { setStatus('กรุณากรอกข้อเท็จจริง'); return; }
+      const scopes = getScopes(); const selected = getSelectedSections(); setStatus('กำลังวิเคราะห์…');
+
+      const types = classifyCase(facts); renderCaseType(types);
+      const elements = analyzeElements(facts);
+      renderStatutesAndProcedure(scopes, elements);
+      renderStrategies();
+      renderWitnessPlans();
+      renderEvidence();
+      document.getElementById('summary').textContent = composeSummary(facts, elements);
+      renderVerdict(determineVerdict(types, elements));
+
+      try {
+        const gem = await callGemini(buildPrompt(role, facts, selected, scopes));
+        const note = extractGeminiText(gem);
+        document.getElementById('aiNote').textContent = note || 'ไม่มีข้อความ';
+        renderPrecedents(extractPrecedents(note));
+        setStatus('เสร็จสิ้น');
+      } catch(e) {
+        document.getElementById('aiNote').textContent = 'เรียก Gemini ไม่สำเร็จ: ' + (e.message || e);
+        setStatus('ผิดพลาด');
+      }
+    });
+
+    // init
+    renderEvidence();
+    setStatus('พร้อมใช้งาน');
+  </script>
+</body>
+</html>
